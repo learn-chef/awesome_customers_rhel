@@ -3,6 +3,7 @@
 # Recipe:: web
 #
 # Copyright (c) 2016 The Authors, All Rights Reserved.
+# Install Apache and start the service.
 httpd_service 'customers' do
   mpm 'prefork'
   action [:create, :start]
@@ -20,9 +21,9 @@ directory node['awesome_customers_rhel']['document_root'] do
   recursive true
 end
 
-# Load the secrets file and the encrypted data bag item that holds the database password.
-password_secret = Chef::EncryptedDataBagItem.load_secret(node['awesome_customers_rhel']['passwords']['secret_path'])
-user_password_data_bag_item = Chef::EncryptedDataBagItem.load('passwords', 'db_admin_password', password_secret)
+# Load the secrets file and the encrypted data bag item that holds the root password.
+password_secret = Chef::EncryptedDataBagItem.load_secret(node['awesome_customers_rhel']['secret_file'])
+password_data_bag_item = Chef::EncryptedDataBagItem.load('database_passwords', 'mysql_customers', password_secret)
 
 # Write the home page.
 template "#{node['awesome_customers_rhel']['document_root']}/index.php" do
@@ -31,15 +32,17 @@ template "#{node['awesome_customers_rhel']['document_root']}/index.php" do
   owner node['awesome_customers_rhel']['user']
   group node['awesome_customers_rhel']['group']
   variables(
-    :database_password => user_password_data_bag_item['password']
+    :database_password => password_data_bag_item['admin_password']
   )
 end
 
-# Install the mod_php5 Apache module.
+# Install the mod_php Apache module.
 httpd_module 'php' do
   instance 'customers'
 end
 
+# Install php-mysql.
 package 'php-mysql' do
+  action :install
   notifies :restart, 'httpd_service[customers]'
 end

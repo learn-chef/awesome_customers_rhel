@@ -9,3 +9,7 @@ ports = node.default['awesome_customers_rhel']['open_ports']
 firewall_rule "open ports #{ports}" do
   port ports
 end
+
+firewall 'default' do
+  action :save
+end

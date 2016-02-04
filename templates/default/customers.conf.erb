@@ -3,7 +3,7 @@
   ServerAdmin 'ops@example.com'
 
   DocumentRoot <%= node['awesome_customers_rhel']['document_root'] %>
-  <Directory />
+  <Directory "/">
           Options FollowSymLinks
           AllowOverride None
   </Directory>

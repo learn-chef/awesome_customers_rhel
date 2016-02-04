@@ -13,12 +13,12 @@ mysql_client 'default' do
 end
 
 # Load the secrets file and the encrypted data bag item that holds the root password.
-password_secret = Chef::EncryptedDataBagItem.load_secret(node['awesome_customers_rhel']['passwords']['secret_path'])
-root_password_data_bag_item = Chef::EncryptedDataBagItem.load('passwords', 'sql_server_root_password', password_secret)
+password_secret = Chef::EncryptedDataBagItem.load_secret(node['awesome_customers_rhel']['secret_file'])
+password_data_bag_item = Chef::EncryptedDataBagItem.load('database_passwords', 'mysql_customers', password_secret)
 
 # Configure the MySQL service.
 mysql_service 'default' do
-  initial_root_password root_password_data_bag_item['password']
+  initial_root_password password_data_bag_item['root_password']
   action [:create, :start]
 end
 
@@ -26,30 +26,27 @@ end
 mysql_database node['awesome_customers_rhel']['database']['dbname'] do
   connection(
     :host => node['awesome_customers_rhel']['database']['host'],
-    :username => node['awesome_customers_rhel']['database']['username'],
-    :password => root_password_data_bag_item['password']
+    :username => node['awesome_customers_rhel']['database']['root_username'],
+    :password => password_data_bag_item['root_password']
   )
   action :create
 end
 
-# Load the encrypted data bag item that holds the database user's password.
-user_password_data_bag_item = Chef::EncryptedDataBagItem.load('passwords', 'db_admin_password', password_secret)
-
 # Add a database user.
-mysql_database_user node['awesome_customers_rhel']['database']['app']['username'] do
+mysql_database_user node['awesome_customers_rhel']['database']['admin_username'] do
   connection(
     :host => node['awesome_customers_rhel']['database']['host'],
-    :username => node['awesome_customers_rhel']['database']['username'],
-    :password => root_password_data_bag_item['password']
+    :username => node['awesome_customers_rhel']['database']['root_username'],
+    :password => password_data_bag_item['root_password']
   )
-  password user_password_data_bag_item['password']
+  password password_data_bag_item['admin_password']
   database_name node['awesome_customers_rhel']['database']['dbname']
   host node['awesome_customers_rhel']['database']['host']
   action [:create, :grant]
 end
 
 # Write schema seed file to filesystem.
-cookbook_file node['awesome_customers_rhel']['database']['seed_file'] do
+cookbook_file node['awesome_customers_rhel']['database']['create_tables_script'] do
   source 'create-tables.sql'
   owner 'root'
   group 'root'
@@ -57,7 +54,7 @@ cookbook_file node['awesome_customers_rhel']['database']['seed_file'] do
 end
 
 # Seed the database with a table and test data.
-execute 'initialize database' do
-  command "mysql -h #{node['awesome_customers_rhel']['database']['host']} -u #{node['awesome_customers_rhel']['database']['app']['username']} -p#{user_password_data_bag_item['password']} -D #{node['awesome_customers_rhel']['database']['dbname']} < #{node['awesome_customers_rhel']['database']['seed_file']}"
-  not_if  "mysql -h #{node['awesome_customers_rhel']['database']['host']} -u #{node['awesome_customers_rhel']['database']['app']['username']} -p#{user_password_data_bag_item['password']} -D #{node['awesome_customers_rhel']['database']['dbname']} -e 'describe customers;'"
+execute "initialize #{node['awesome_customers_rhel']['database']['dbname']} database" do
+  command "mysql -h #{node['awesome_customers_rhel']['database']['host']} -u #{node['awesome_customers_rhel']['database']['admin_username']} -p#{password_data_bag_item['admin_password']} -D #{node['awesome_customers_rhel']['database']['dbname']} < #{node['awesome_customers_rhel']['database']['create_tables_script']}"
+  not_if  "mysql -h #{node['awesome_customers_rhel']['database']['host']} -u #{node['awesome_customers_rhel']['database']['admin_username']} -p#{password_data_bag_item['admin_password']} -D #{node['awesome_customers_rhel']['database']['dbname']} -e 'describe customers;'"
 end
