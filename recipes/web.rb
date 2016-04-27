@@ -21,19 +21,12 @@ directory node['awesome_customers_rhel']['document_root'] do
   recursive true
 end
 
-# Load the secrets file and the encrypted data bag item that holds the root password.
-password_secret = Chef::EncryptedDataBagItem.load_secret(node['awesome_customers_rhel']['secret_file'])
-password_data_bag_item = Chef::EncryptedDataBagItem.load('database_passwords', 'mysql_customers', password_secret)
-
 # Write the home page.
 template "#{node['awesome_customers_rhel']['document_root']}/index.php" do
   source 'index.php.erb'
   mode '0644'
   owner node['awesome_customers_rhel']['user']
   group node['awesome_customers_rhel']['group']
-  variables(
-    :database_password => password_data_bag_item['admin_password']
-  )
 end
 
 # Install the mod_php Apache module.
