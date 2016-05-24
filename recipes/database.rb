@@ -3,13 +3,15 @@
 # Recipe:: database
 #
 # Copyright (c) 2016 The Authors, All Rights Reserved.
+
 # Copy commonly-used node attribute values into variables.
-root_password = node['awesome_customers_rhel']['database']['root_password']
-admin_password = node['awesome_customers_rhel']['database']['admin_password']
-dbname = node['awesome_customers_rhel']['database']['dbname']
-host = node['awesome_customers_rhel']['database']['host']
-root_username = node['awesome_customers_rhel']['database']['root_username']
-admin_username = node['awesome_customers_rhel']['database']['admin_username']
+h = node['awesome_customers_rhel']['database']
+root_password = h['root_password']
+admin_password = h['admin_password']
+dbname = h['dbname']
+host = h['host']
+root_username = h['root_username']
+admin_username = h['admin_username']
 connection_info = { host: host, username: root_username, password: root_password }
 
 # Configure the MySQL client.
@@ -30,13 +32,13 @@ end
 
 # Create the database instance.
 mysql_database dbname do
-  connection(connection_info)
+  connection connection_info
   action :create
 end
 
 # Add a database user.
 mysql_database_user admin_username do
-  connection(connection_info)
+  connection connection_info
   password admin_password
   database_name dbname
   host host
