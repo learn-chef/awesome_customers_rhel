@@ -16,8 +16,10 @@ describe 'awesome_customers_rhel::database' do
       { host: 'fake_host', username: 'fake_root', password: 'fake_root_password' }
     end
 
+    let(:create_tables_script_path) { File.join(Chef::Config[:file_cache_path], 'create-tables.sql') }
+
     let(:chef_run) do
-      ChefSpec::ServerRunner.new(platform: 'centos', version: '7.2.1511', file_cache_path: '/tmp') do |node|
+      ChefSpec::ServerRunner.new(platform: 'centos', version: '7.2.1511') do |node|
         node.set['awesome_customers_rhel']['database']['root_password'] = 'fake_root_password'
         node.set['awesome_customers_rhel']['database']['admin_password'] = 'fake_admin_password'
         node.set['awesome_customers_rhel']['database']['dbname'] = 'fake_database'
@@ -48,7 +50,7 @@ describe 'awesome_customers_rhel::database' do
 
     it 'seeds the database with a table and test data' do
       expect(chef_run).to run_execute('initialize fake_database database')
-        .with(command: "mysql -h fake_host -u fake_admin -pfake_admin_password -D fake_database < /tmp/create-tables.sql")
+        .with(command: "mysql -h fake_host -u fake_admin -pfake_admin_password -D fake_database < #{create_tables_script_path}")
     end
   end
 end
