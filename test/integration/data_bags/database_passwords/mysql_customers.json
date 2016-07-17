@@ -1,0 +1,5 @@
+{
+  "id": "mysql_customers",
+  "root_password": "mysql_root_password",
+  "admin_password": "mysql_admin_password"
+}
