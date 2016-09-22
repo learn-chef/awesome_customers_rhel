@@ -20,12 +20,12 @@ describe 'awesome_customers_rhel::database' do
 
     let(:chef_run) do
       ChefSpec::ServerRunner.new(platform: 'centos', version: '7.2.1511') do |node|
-        node.set['awesome_customers_rhel']['database']['root_password'] = 'fake_root_password'
-        node.set['awesome_customers_rhel']['database']['admin_password'] = 'fake_admin_password'
-        node.set['awesome_customers_rhel']['database']['dbname'] = 'fake_database'
-        node.set['awesome_customers_rhel']['database']['host'] = 'fake_host'
-        node.set['awesome_customers_rhel']['database']['root_username'] = 'fake_root'
-        node.set['awesome_customers_rhel']['database']['admin_username'] = 'fake_admin'
+        node.override['awesome_customers_rhel']['database']['root_password'] = 'fake_root_password'
+        node.override['awesome_customers_rhel']['database']['admin_password'] = 'fake_admin_password'
+        node.override['awesome_customers_rhel']['database']['dbname'] = 'fake_database'
+        node.override['awesome_customers_rhel']['database']['host'] = 'fake_host'
+        node.override['awesome_customers_rhel']['database']['root_username'] = 'fake_root'
+        node.override['awesome_customers_rhel']['database']['admin_username'] = 'fake_admin'
       end.converge(described_recipe)
     end
 
