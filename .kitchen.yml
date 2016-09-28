@@ -9,9 +9,6 @@ provisioner:
 
 platforms:
   - name: centos-7.2
-    driver:
-      customize:
-        memory: 256
 
 suites:
   - name: default
